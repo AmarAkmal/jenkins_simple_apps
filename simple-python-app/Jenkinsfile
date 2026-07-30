@@ -6,26 +6,32 @@ pipeline {
     stages {
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                dir('simple-python-app') {
+                    sh 'pip install -r requirements.txt'
+                }
             }
         }
 
         stage('Run Calculator Tests') {
             steps {
-                sh 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose'
+                dir('simple-python-app') {
+                    sh 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose'
+                }
             }
         }
 
         stage('Run API Tests') {
             steps {
-                sh 'python -m pytest test_api.py --junitxml=results-api.xml --verbose'
+                dir('simple-python-app') {
+                    sh 'python -m pytest test_api.py --junitxml=results-api.xml --verbose'
+                }
             }
         }
     }
 
     post {
         always {
-            junit 'results-*.xml'
+            junit 'simple-python-app/results-*.xml'
         }
         success {
             echo 'All tests passed!'
