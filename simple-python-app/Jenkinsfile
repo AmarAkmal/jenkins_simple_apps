@@ -10,19 +10,19 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat 'pip install -r requirements.txt'
+                sh 'pip install -r requirements.txt'
             }
         }
 
         stage('Run Calculator Tests') {
             steps {
-                bat 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose'
+                sh 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose'
             }
         }
 
         stage('Run API Tests') {
             steps {
-                bat 'python -m pytest test_api.py --junitxml=results-api.xml --verbose'
+                sh 'python -m pytest test_api.py --junitxml=results-api.xml --verbose'
             }
         }
     }
