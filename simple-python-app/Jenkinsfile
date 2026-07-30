@@ -15,9 +15,11 @@ pipeline {
             }
         }
 
-        stage('Fix Permissions') {
+        stage('Clean Workspace') {
             steps {
-                sh 'chmod -R 777 simple-python-app/'
+                dir('simple-python-app') {
+                    sh 'rm -rf __pycache__ .pytest_cache results-*.xml'
+                }
             }
         }
 
