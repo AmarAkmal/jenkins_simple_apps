@@ -2,11 +2,11 @@ import urllib.request
 import urllib.parse
 import sys
 import os
-import json
-import uuid
+import re
 
 TOKEN = "8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w"
 CHAT_ID = "1203641879"
+MAX_LEN = 4000
 
 
 def send_message(text):
@@ -14,47 +14,44 @@ def send_message(text):
     urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data)
 
 
-def send_document(file_path, caption=""):
-    boundary = uuid.uuid4().hex
-    parts = []
-
-    def add_field(name, value):
-        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n")
-
-    add_field("chat_id", CHAT_ID)
-    if caption:
-        add_field("caption", caption)
-
-    with open(file_path, "rb") as f:
-        content = f.read()
-    parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"document\"; filename=\"build.log\"\r\nContent-Type: text/plain\r\n\r\n".encode())
-    parts.append(content)
-    parts.append(f"\r\n--{boundary}--\r\n".encode())
-
-    body = b"".join(p.encode() if isinstance(p, str) else p for p in parts)
-
-    req = urllib.request.Request(
-        f"https://api.telegram.org/bot{TOKEN}/sendDocument",
-        data=body,
-    )
-    req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
-    resp = urllib.request.urlopen(req)
-    return json.loads(resp.read())
+def parse_log(path):
+    passed = []
+    failed = []
+    with open(path) as f:
+        for line in f:
+            m = re.search(r"::(\w+) (PASSED|FAILED)", line)
+            if m:
+                name, result = m.group(1), m.group(2)
+                if result == "PASSED":
+                    passed.append(name)
+                else:
+                    failed.append(name)
+    return passed, failed
 
 
 def main():
     job = os.environ.get("JOB_NAME", "?")
     build = os.environ.get("BUILD_NUMBER", "?")
-    status = sys.argv[1] if len(sys.argv) > 1 else "?"
 
-    smile = "PASSED" if status == "success" else "FAILED"
-    msg = f"Jenkins: {job} #{build} {smile}"
+    lines = [f"\U0001f517 Jenkins: {job} #{build}\n"]
 
     log_file = "build.log"
-    if os.path.exists(log_file) and os.path.getsize(log_file) > 0:
-        send_document(log_file, caption=msg)
+    if os.path.exists(log_file):
+        passed, failed = parse_log(log_file)
+        for t in passed:
+            lines.append(f"\u2705 {t}")
+        for t in failed:
+            lines.append(f"\u274c {t}")
+        if passed or failed:
+            lines.append(f"\nTotal: {len(passed)} passed, {len(failed)} failed")
     else:
-        send_message(msg)
+        lines.append("No test results found")
+
+    msg = "\n".join(lines)
+    if len(msg) > MAX_LEN:
+        msg = msg[:MAX_LEN] + "\n...(truncated)"
+
+    send_message(msg)
 
 
 if __name__ == "__main__":
