@@ -38,15 +38,15 @@ pipeline {
         }
         success {
             script {
-                def msg = "✅ Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} passed"
-                sh "curl -s -X POST https://api.telegram.org/bot8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w/sendMessage -d chat_id=1203641879 -d text='${msg}' > /dev/null"
+                def msg = "Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} passed"
+                sh "python -c \"import urllib.request; import urllib.parse; d=urllib.parse.urlencode({'chat_id':'1203641879','text':'${msg}'}).encode(); urllib.request.urlopen('https://api.telegram.org/bot8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w/sendMessage', d)\""
             }
             echo 'All tests passed!'
         }
         failure {
             script {
-                def msg = "❌ Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} failed"
-                sh "curl -s -X POST https://api.telegram.org/bot8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w/sendMessage -d chat_id=1203641879 -d text='${msg}' > /dev/null"
+                def msg = "Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} failed"
+                sh "python -c \"import urllib.request; import urllib.parse; d=urllib.parse.urlencode({'chat_id':'1203641879','text':'${msg}'}).encode(); urllib.request.urlopen('https://api.telegram.org/bot8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w/sendMessage', d)\""
             }
             echo 'Some tests failed.'
         }
