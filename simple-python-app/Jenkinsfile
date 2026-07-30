@@ -18,7 +18,7 @@ pipeline {
         stage('Run Calculator Tests') {
             steps {
                 dir('simple-python-app') {
-                    sh 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose'
+                    sh 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose 2>&1 | tee -a build.log'
                 }
             }
         }
@@ -26,7 +26,7 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 dir('simple-python-app') {
-                    sh 'python -m pytest test_api.py --junitxml=results-api.xml --verbose'
+                    sh 'python -m pytest test_api.py --junitxml=results-api.xml --verbose 2>&1 | tee -a build.log'
                 }
             }
         }
@@ -34,19 +34,17 @@ pipeline {
 
     post {
         always {
-            junit 'simple-python-app/results-*.xml'
+            junit '**/results-*.xml'
         }
         success {
-            script {
-                def msg = "Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} passed"
-                sh "python -c \"import urllib.request; import urllib.parse; d=urllib.parse.urlencode({'chat_id':'1203641879','text':'${msg}'}).encode(); urllib.request.urlopen('https://api.telegram.org/bot8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w/sendMessage', d)\""
+            dir('simple-python-app') {
+                sh 'python notify.py success'
             }
             echo 'All tests passed!'
         }
         failure {
-            script {
-                def msg = "Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} failed"
-                sh "python -c \"import urllib.request; import urllib.parse; d=urllib.parse.urlencode({'chat_id':'1203641879','text':'${msg}'}).encode(); urllib.request.urlopen('https://api.telegram.org/bot8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w/sendMessage', d)\""
+            dir('simple-python-app') {
+                sh 'python notify.py failure'
             }
             echo 'Some tests failed.'
         }
