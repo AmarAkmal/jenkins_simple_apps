@@ -2,15 +2,44 @@ import urllib.request
 import urllib.parse
 import sys
 import os
+import io
+import uuid
 
 TOKEN = "8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w"
 CHAT_ID = "1203641879"
-MAX_MSG = 4000
 
 
-def send(text):
+def send_message(text):
     data = urllib.parse.urlencode({"chat_id": CHAT_ID, "text": text}).encode()
     urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data)
+
+
+def send_document(file_path, caption=""):
+    boundary = uuid.uuid4().hex
+    body = io.BytesIO()
+
+    def w(s):
+        body.write(s.encode())
+
+    if caption:
+        w(f"--{boundary}\r\n")
+        w('Content-Disposition: form-data; name="caption"\r\n\r\n')
+        w(f"{caption}\r\n")
+
+    w(f"--{boundary}\r\n")
+    w(f'Content-Disposition: form-data; name="document"; filename="build.log"\r\n')
+    w("Content-Type: text/plain\r\n\r\n")
+    with open(file_path, "rb") as f:
+        body.write(f.read())
+    w("\r\n")
+    w(f"--{boundary}--\r\n")
+
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{TOKEN}/sendDocument",
+        data=body.getvalue(),
+    )
+    req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
+    urllib.request.urlopen(req)
 
 
 def main():
@@ -18,29 +47,14 @@ def main():
     build = os.environ.get("BUILD_NUMBER", "?")
     status = sys.argv[1] if len(sys.argv) > 1 else "?"
 
+    smile = "PASSED" if status == "success" else "FAILED"
+    msg = f"Jenkins: {job} #{build} {smile}"
+
     log_file = "build.log"
-    log_text = ""
-    if os.path.exists(log_file):
-        with open(log_file) as f:
-            log_text = f.read()
-
-    if status == "success":
-        summary = f"PASSED ({log_text.count('PASSED')} passed, {log_text.count('FAILED')} failed)"
+    if os.path.exists(log_file) and os.path.getsize(log_file) > 0:
+        send_document(log_file, caption=msg)
     else:
-        summary = "FAILED"
-
-    msg = f"{'✅' if status == 'success' else '❌'} Jenkins: {job} #{build} {summary}\n\n"
-
-    if log_text:
-        log_lines = log_text.strip().split("\n")
-        tail = [l for l in log_lines if "PASSED" in l or "FAILED" in l or "ERROR" in l or "error" in l]
-        if tail:
-            msg += "\n".join(tail[-10:])
-
-    if len(msg) > MAX_MSG:
-        msg = msg[:MAX_MSG] + "\n...(truncated)"
-
-    send(msg)
+        send_message(msg)
 
 
 if __name__ == "__main__":
