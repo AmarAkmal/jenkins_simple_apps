@@ -37,9 +37,17 @@ pipeline {
             junit 'simple-python-app/results-*.xml'
         }
         success {
+            script {
+                def msg = "✅ Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} passed"
+                sh "curl -s -X POST https://api.telegram.org/bot<TOKEN>/sendMessage -d chat_id=<CHAT_ID> -d text='${msg}' > /dev/null"
+            }
             echo 'All tests passed!'
         }
         failure {
+            script {
+                def msg = "❌ Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER} failed"
+                sh "curl -s -X POST https://api.telegram.org/bot<TOKEN>/sendMessage -d chat_id=<CHAT_ID> -d text='${msg}' > /dev/null"
+            }
             echo 'Some tests failed.'
         }
     }
