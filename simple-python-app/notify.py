@@ -2,7 +2,7 @@ import urllib.request
 import urllib.parse
 import sys
 import os
-import io
+import json
 import uuid
 
 TOKEN = "8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w"
@@ -16,30 +16,30 @@ def send_message(text):
 
 def send_document(file_path, caption=""):
     boundary = uuid.uuid4().hex
-    body = io.BytesIO()
+    parts = []
 
-    def w(s):
-        body.write(s.encode())
+    def add_field(name, value):
+        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n")
 
+    add_field("chat_id", CHAT_ID)
     if caption:
-        w(f"--{boundary}\r\n")
-        w('Content-Disposition: form-data; name="caption"\r\n\r\n')
-        w(f"{caption}\r\n")
+        add_field("caption", caption)
 
-    w(f"--{boundary}\r\n")
-    w(f'Content-Disposition: form-data; name="document"; filename="build.log"\r\n')
-    w("Content-Type: text/plain\r\n\r\n")
     with open(file_path, "rb") as f:
-        body.write(f.read())
-    w("\r\n")
-    w(f"--{boundary}--\r\n")
+        content = f.read()
+    parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"document\"; filename=\"build.log\"\r\nContent-Type: text/plain\r\n\r\n".encode())
+    parts.append(content)
+    parts.append(f"\r\n--{boundary}--\r\n".encode())
+
+    body = b"".join(p.encode() if isinstance(p, str) else p for p in parts)
 
     req = urllib.request.Request(
         f"https://api.telegram.org/bot{TOKEN}/sendDocument",
-        data=body.getvalue(),
+        data=body,
     )
     req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
-    urllib.request.urlopen(req)
+    resp = urllib.request.urlopen(req)
+    return json.loads(resp.read())
 
 
 def main():
