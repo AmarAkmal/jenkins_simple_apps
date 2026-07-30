@@ -15,6 +15,12 @@ pipeline {
             }
         }
 
+        stage('Fix Permissions') {
+            steps {
+                sh 'chmod -R 777 simple-python-app/'
+            }
+        }
+
         stage('Run Calculator Tests') {
             steps {
                 dir('simple-python-app') {
