@@ -15,14 +15,6 @@ pipeline {
             }
         }
 
-        stage('Clean Workspace') {
-            steps {
-                dir('simple-python-app') {
-                    sh 'rm -rf __pycache__ .pytest_cache results-*.xml'
-                }
-            }
-        }
-
         stage('Run Calculator Tests') {
             steps {
                 dir('simple-python-app') {
