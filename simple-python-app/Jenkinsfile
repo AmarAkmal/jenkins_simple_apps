@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                bat 'pip install -r requirements.txt'
+            }
+        }
+
+        stage('Run Calculator Tests') {
+            steps {
+                bat 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose'
+            }
+        }
+
+        stage('Run API Tests') {
+            steps {
+                bat 'python -m pytest test_api.py --junitxml=results-api.xml --verbose'
+            }
+        }
+    }
+
+    post {
+        always {
+            junit 'results-*.xml'
+        }
+        success {
+            echo 'All tests passed!'
+        }
+        failure {
+            echo 'Some tests failed.'
+        }
+    }
+}
