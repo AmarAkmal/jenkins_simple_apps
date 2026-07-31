@@ -88,10 +88,10 @@ def main():
         if passed or failed:
             lines.append("")
             lines.append(f"\U0001f4ca <b>Test results: {len(passed)} \u2705 / {len(failed)} \u274c</b>")
-            for t in passed:
-                lines.append(f"\u2705 {html_escape(t)}")
             for t in failed:
                 lines.append(f"\u274c {html_escape(t)}")
+            if not failed and status == "success":
+                lines.append("\u2705 All tests passed")
 
     msg = "\n".join(lines)
     if len(msg) > MAX_LEN:

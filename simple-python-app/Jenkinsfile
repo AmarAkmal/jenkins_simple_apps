@@ -21,7 +21,7 @@ pipeline {
         stage('Run Calculator Tests') {
             steps {
                 dir('simple-python-app') {
-                    sh 'python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose 2>&1 | tee -a build.log'
+                    sh 'rm -f build.log && python -m pytest test_calculator.py --junitxml=results-calculator.xml --verbose 2>&1 | tee build.log'
                 }
             }
         }
