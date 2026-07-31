@@ -4,14 +4,16 @@ import sys
 import os
 import re
 
-TOKEN = "8738868776:AAHbKTBfFItG7ATSEd5BuR5c_M3NJZSaO7w"
-CHAT_ID = "1203641879"
 MAX_LEN = 4000
 
 
 def send_message(text):
-    data = urllib.parse.urlencode({"chat_id": CHAT_ID, "text": text}).encode()
-    urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data)
+    token = os.environ.get("BOT_TOKEN", "")
+    chat_id = os.environ.get("CHAT_ID", "")
+    if not token or not chat_id:
+        raise SystemExit("BOT_TOKEN and CHAT_ID env vars are required")
+    data = urllib.parse.urlencode({"chat_id": chat_id, "text": text}).encode()
+    urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", data)
 
 
 def parse_log(path):

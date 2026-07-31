@@ -41,14 +41,24 @@ pipeline {
             junit '**/results-*.xml'
         }
         success {
-            dir('simple-python-app') {
-                sh 'python notify.py success'
+            withCredentials([
+                string(credentialsId: 'TELEGRAM_BOT_TOKEN', variable: 'BOT_TOKEN'),
+                string(credentialsId: 'TELEGRAM_CHAT_ID', variable: 'CHAT_ID')
+            ]) {
+                dir('simple-python-app') {
+                    sh 'python notify.py success'
+                }
             }
             echo 'All tests passed!'
         }
         failure {
-            dir('simple-python-app') {
-                sh 'python notify.py failure'
+            withCredentials([
+                string(credentialsId: 'TELEGRAM_BOT_TOKEN', variable: 'BOT_TOKEN'),
+                string(credentialsId: 'TELEGRAM_CHAT_ID', variable: 'CHAT_ID')
+            ]) {
+                dir('simple-python-app') {
+                    sh 'python notify.py failure'
+                }
             }
             echo 'Some tests failed.'
         }
