@@ -10,7 +10,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 dir('simple-python-app') {
-                    sh 'pip install -r requirements.txt'
+                    sh 'pip install --default-timeout=120 --retries 5 -r requirements.txt'
                 }
             }
         }
