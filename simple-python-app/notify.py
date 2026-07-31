@@ -61,6 +61,7 @@ def fmt_duration(ms):
     return f"{int(s // 60)}m {int(s % 60)}s"
 
 
+
 def main():
     status = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("BUILD_STATUS", "success")
     status = status.lower() if status else "success"
